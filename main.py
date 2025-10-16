@@ -18,18 +18,44 @@ def demo_polynomial_matrices() -> None:
     print('Added matrices of polynomials:')
     print(pm_added)
 
+    pm_added_number = pm1 + 3
+    print("Added number to polynomials:")
+    print(pm_added_number)
+
     pm_multiplied = pm1 * pm2
     print('Multiplied matrices of polynomials:')
     print(pm_multiplied)
 
+    print("Transposing:")
+    pmt = pm1.T
+    print(pm1)
+    print(" \\/ \\/ \\/ \\/ \\/ ")
+    print(pmt)
+
 
 def demo_kyber_pke() -> None:
     """Show how KyberPKE class works."""
-    kyber = KyberPKE(n=4)
+
+    # Alice
+    kyber = KyberPKE(n=7)
+    public_key, private_key = kyber.generate_keys()
     print('Public key:')
-    print(kyber.public_key)
+    print(public_key)
     print('Private key:')
-    print(kyber.private_key)
+    print(private_key)
+
+    # Bob
+    message = "Who's the monster?"
+    # the message in binary can be have as many bits as 
+    # degree of polynomials (which is parameter "n") + 1
+    encrypted_message = kyber.encrypt_message(message, public_key)
+    print('Encrypted message:')
+    print(encrypted_message)
+
+    # Alice
+    decrypted_message = kyber.decrypt_message(encrypted_message, private_key)
+    print('Decrypted message:')
+    print(decrypted_message)
 
 
 if __name__ == '__main__':

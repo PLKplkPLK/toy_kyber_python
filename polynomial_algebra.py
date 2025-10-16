@@ -3,14 +3,17 @@ import numpy as np
 
 class PolynomialMatrix():
     """Matrices and vectors of polynomials."""
-    def __init__(self, max_coef_value: int, n_rows: int, n_cols: int = 1, polynomial_degree: int = 256):
+    def __init__(self, max_coef_value: int, n_rows: int, n_cols: int = 1, polynomial_degree: int = 256, include_negative: bool = False):
         """Initialize m x n polynomial matrix (or vector if n_cols=1) with polynomials with random (uniform distr.) coeficcients [0, max_coef_value)."""
         self.n_rows = n_rows
         self.n_cols = n_cols
         self.max_coef_value = max_coef_value
         self.polynomial_degree = polynomial_degree
 
-        self.matrix = np.random.randint(0, max_coef_value, (n_rows, n_cols, polynomial_degree + 1))
+        if include_negative:
+            self.matrix = np.random.randint(-max_coef_value, max_coef_value+1, (n_rows, n_cols, polynomial_degree + 1))
+        else:
+            self.matrix = np.random.randint(0, max_coef_value, (n_rows, n_cols, polynomial_degree + 1))
 
     def __repr__(self) -> str:
         """Print matrix of polynomials."""
@@ -58,10 +61,27 @@ class PolynomialMatrix():
         else:
             raise TypeError("Unsupported operand type for + in PolynomialMatrix. Only PolynomialMatrix and int allowed.")
 
-        result_pm = PolynomialMatrix(self.max_coef_value, self.n_cols, self.n_cols, self.polynomial_degree)
+        result_pm = PolynomialMatrix(self.max_coef_value, self.n_rows, self.n_cols, self.polynomial_degree)
         result_pm.matrix = values
         return result_pm
-    
+
+    def __sub__(self, other: "PolynomialMatrix") -> "PolynomialMatrix":
+        """Subtract two polynomial matrices."""
+        if self.n_rows != other.n_rows or self.n_cols != other.n_cols:
+                raise ValueError("Matrix dimensions don't match.")
+        A = self.matrix
+        B = other.matrix
+        # if polynomials degrees don't match, add padding to the smaller one
+        if A.shape[2] < B.shape[2]:
+            A = np.pad(A, ((0, 0), (0, 0), (0, B.shape[2] - A.shape[2])), mode='constant')
+        elif A.shape[2] > B.shape[2]:
+                B = np.pad(B, ((0, 0), (0, 0), (0, A.shape[2] - B.shape[2])), mode='constant')
+
+        values = (A - B) % self.max_coef_value
+        result_pm = PolynomialMatrix(self.max_coef_value, self.n_rows, self.n_cols, self.polynomial_degree)
+        result_pm.matrix = values
+        return result_pm
+
     def __mul__(self, other: "PolynomialMatrix") -> "PolynomialMatrix":
         """Multiply matrices: coefficients and degrees of polynomials must be included."""
         if self.n_cols != other.n_rows:
@@ -77,7 +97,6 @@ class PolynomialMatrix():
                         values[result_row, result_col, idx % (self.polynomial_degree + 1)] = \
                             (values[result_row, result_col, idx % (self.polynomial_degree + 1)] + coef) % self.max_coef_value
 
-
         result_pm = PolynomialMatrix(self.max_coef_value, self.n_rows, other.n_cols, self.polynomial_degree)
         result_pm.matrix = values
         return result_pm
@@ -86,6 +105,6 @@ class PolynomialMatrix():
     def T(self) -> "PolynomialMatrix":
         """Transpose polynomials matrix."""
 
-        pm_transposed = PolynomialMatrix(self.max_coef_value, self.n_rows, self.n_cols, self.polynomial_degree)
+        pm_transposed = PolynomialMatrix(self.max_coef_value, self.n_cols, self.n_rows, self.polynomial_degree)
         pm_transposed.matrix = np.transpose(self.matrix, (1, 0, 2))
         return pm_transposed
