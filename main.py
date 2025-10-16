@@ -9,8 +9,8 @@ np.random.seed(42)
 
 def demo_polynomial_matrices() -> None:
     """Show how the PolynomialMatrix class works."""
-    pm1 = PolynomialMatrix(10, 2, 2, 2)
-    pm2 = PolynomialMatrix(10, 2, 2, 2)
+    pm1 = PolynomialMatrix(10, 2, 2, 10, 3)
+    pm2 = PolynomialMatrix(10, 2, 2, 10, 3)
     print(pm1)
     print(pm2)
 
@@ -37,7 +37,7 @@ def demo_kyber_pke() -> None:
     """Show how KyberPKE class works."""
 
     # Alice
-    kyber = KyberPKE(n=7)
+    kyber = KyberPKE(n=256)
     public_key, private_key = kyber.generate_keys()
     print('Public key:')
     print(public_key)
@@ -46,7 +46,7 @@ def demo_kyber_pke() -> None:
 
     # Bob
     message = "Who's the monster?"
-    # the message in binary can be have as many bits as 
+    # the message in binary can be have as many bits as
     # degree of polynomials (which is parameter "n") + 1
     encrypted_message = kyber.encrypt_message(message, public_key)
     print('Encrypted message:')
@@ -58,6 +58,15 @@ def demo_kyber_pke() -> None:
     print(decrypted_message)
 
 
+def test_operations() -> None:
+    kyber = KyberPKE(n=10)
+    public_key, private_key = kyber.generate_keys()
+    A, t = public_key
+    s = private_key
+    print((A * s) - t)
+
+
 if __name__ == '__main__':
-    #demo_polynomial_matrices()
+    # demo_polynomial_matrices()
     demo_kyber_pke()
+    # test_operations()
