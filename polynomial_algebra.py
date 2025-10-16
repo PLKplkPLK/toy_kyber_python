@@ -1,12 +1,13 @@
-from pdb import pm
 import numpy as np
+
 
 class PolynomialMatrix():
     """Matrices of polynomials over Z_mod[x]/(x^n + 1)."""
 
-    def __init__(self, q: int, n_rows: int, n_cols, max_coefficient_value: int,
-                 polynomial_degree: int, include_negative: bool = False):
-        """Initialize m x n polynomial matrix (or vector if n_cols=1), everything modulo q.
+    def __init__(self, q: int, n_rows: int, n_cols: int,
+                 max_coefficient_value: int, polynomial_degree: int,
+                 include_negative: bool = False):
+        """Initialize m x n polynomial matrix Z_mod[x]/(x^n + 1).
 
         The coefficients are random (uniform distr.) [0, max_coef_value),
         or [-max_coef_value, max_coef_value] if include_negative is True.
@@ -20,9 +21,12 @@ class PolynomialMatrix():
         if max_coefficient_value == 0:
             self.matrix = np.zeros((n_rows, n_cols, polynomial_degree))
         elif include_negative:
-            self.matrix = np.random.randint(-max_coefficient_value, max_coefficient_value+1, (n_rows, n_cols, polynomial_degree))
+            self.matrix = np.random.randint(
+                -max_coefficient_value, max_coefficient_value+1,
+                (n_rows, n_cols, polynomial_degree))
         else:
-            self.matrix = np.random.randint(0, max_coefficient_value, (n_rows, n_cols, polynomial_degree))
+            self.matrix = np.random.randint(
+                0, max_coefficient_value, (n_rows, n_cols, polynomial_degree))
 
     def __repr__(self) -> str:
         """Print matrix of polynomials."""
@@ -45,14 +49,16 @@ class PolynomialMatrix():
         matrix_str = "\n".join(rows_repr)
 
         return f"PolynomialMatrix {self.n_rows}x{self.n_cols}:\n{matrix_str}"
-    
+
     def copy(self) -> "PolynomialMatrix":
-        """Copy the structure of PolynomialMatrix (with polynomial coefficients = 0)"""
+        """Copy the structure of PolynomialMatrix (with polynomial
+        coefficients = 0)
+        """
         return PolynomialMatrix(self.q, self.n_rows, self.n_cols, 0, self.n)
 
     def __add__(self, other: "PolynomialMatrix | int") -> "PolynomialMatrix":
-        """If adding PolynomialMatrix: sum coefficients of polynomials (modulo max_coef_value),
-        if it's int: add a number to the bias of polynomials.
+        """If adding PolynomialMatrix: sum coefficients of polynomials
+        (modulo q), if it's int: add a number to the bias of polynomials.
         """
         if isinstance(other, PolynomialMatrix):
             if self.n_rows != other.n_rows or self.n_cols != other.n_cols:
@@ -60,18 +66,22 @@ class PolynomialMatrix():
 
             A = self.matrix
             B = other.matrix
-            # If polynomials degrees don't match, add padding to the smaller one
-            if A.shape[2] < B.shape[2]:
-                A = np.pad(A, ((0, 0), (0, 0), (0, B.shape[2] - A.shape[2])), mode='constant')
-            elif A.shape[2] > B.shape[2]:
-                 B = np.pad(B, ((0, 0), (0, 0), (0, A.shape[2] - B.shape[2])), mode='constant')
 
+            # If polynomials degrees don't match, add padding to the smaller
+            if A.shape[2] < B.shape[2]:
+                A = np.pad(A, ((0, 0), (0, 0), (0, B.shape[2] - A.shape[2])),
+                           mode='constant')
+            elif A.shape[2] > B.shape[2]:
+                B = np.pad(B, ((0, 0), (0, 0), (0, A.shape[2] - B.shape[2])),
+                           mode='constant')
             values = (A + B) % self.q
         elif isinstance(other, int):
             values = self.matrix.copy()
-            values[:,:,0] = (self.matrix[:,:,0] + other) % self.q
+            values[:, :, 0] = (self.matrix[:, :, 0] + other) % self.q
         else:
-            raise TypeError("Unsupported operand type for + in PolynomialMatrix. Only PolynomialMatrix and int allowed.")
+            raise TypeError("Unsupported operand type for + in "
+                            "PolynomialMatrix. Only PolynomialMatrix"
+                            "and int allowed.")
 
         result_pm = self.copy()
         result_pm.matrix = values
@@ -80,14 +90,16 @@ class PolynomialMatrix():
     def __sub__(self, other: "PolynomialMatrix") -> "PolynomialMatrix":
         """Subtract two polynomial matrices."""
         if self.n_rows != other.n_rows or self.n_cols != other.n_cols:
-                raise ValueError("Matrix dimensions don't match.")
+            raise ValueError("Matrix dimensions don't match.")
         A = self.matrix
         B = other.matrix
-        # if polynomials degrees don't match, add padding to the smaller one
+        # if polynomials degrees don't match, add padding to the smaller
         if A.shape[2] < B.shape[2]:
-            A = np.pad(A, ((0, 0), (0, 0), (0, B.shape[2] - A.shape[2])), mode='constant')
+            A = np.pad(A, ((0, 0), (0, 0), (0, B.shape[2] - A.shape[2])),
+                       mode='constant')
         elif A.shape[2] > B.shape[2]:
-            B = np.pad(B, ((0, 0), (0, 0), (0, A.shape[2] - B.shape[2])), mode='constant')
+            B = np.pad(B, ((0, 0), (0, 0), (0, A.shape[2] - B.shape[2])),
+                       mode='constant')
 
         values = (A - B) % self.q
         result_pm = self.copy()
@@ -96,8 +108,9 @@ class PolynomialMatrix():
 
     def __mul__(self, other: "PolynomialMatrix") -> "PolynomialMatrix":
         """Multiply matrices.
-        Performs negacyclic convolution: coefficients with index >= n are folded
-        into idx - n with a sign flip (because x^n = -1).
+
+        Performs negacyclic convolution: coefficients with index >= n are
+        folded into idx - n with a sign flip (x^n = -1).
         """
         if self.n_cols != other.n_rows:
             raise ValueError("Matrix dimensions don't match.")
@@ -112,9 +125,9 @@ class PolynomialMatrix():
                 for m in range(self.n_cols):
                     a = self.matrix[r, m].astype(int)
                     b = other.matrix[m, c].astype(int)
-                    # that's so cool that the polynomial multiplication works like convolution
-                    conv = np.convolve(a, b).astype(int)  # length up to 2*n-1
-                    # fold using negacyclic rule: for idx >= n subtract into idx-n
+                    # so cool that the polynomial multiplication is convolution
+                    conv = np.convolve(a, b).astype(int)
+                    # fold using negacyclic rule
                     for idx, coef in enumerate(conv):
                         if idx < n:
                             acc[idx] = (acc[idx] + coef) % self.q
@@ -124,13 +137,15 @@ class PolynomialMatrix():
                             acc[t] = (acc[t] - coef) % self.q
                 values[r, c] = acc % self.q
 
-        result_pm = PolynomialMatrix(self.q, self.n_rows, other.n_cols, 0, self.n)
+        result_pm = PolynomialMatrix(self.q, self.n_rows,
+                                     other.n_cols, 0, self.n)
         result_pm.matrix = values
         return result_pm
 
     @property
     def T(self) -> "PolynomialMatrix":
         """Transpose polynomials matrix."""
-        pm_transposed = PolynomialMatrix(self.q, self.n_cols, self.n_rows, 0, self.n)
+        pm_transposed = PolynomialMatrix(self.q, self.n_cols,
+                                         self.n_rows, 0, self.n)
         pm_transposed.matrix = np.transpose(self.matrix, (1, 0, 2))
         return pm_transposed
