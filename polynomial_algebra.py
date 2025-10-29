@@ -1,5 +1,10 @@
 import numpy as np
 
+from polynomial_multiplication_fft import multiply_polynomials
+
+
+USE_DFT_INSTEAD_OF_CONVOLUTION = True
+
 
 class PolynomialMatrix():
     """Matrices of polynomials over Z_mod[x]/(x^n + 1)."""
@@ -126,18 +131,21 @@ class PolynomialMatrix():
                 for m in range(self.n_cols):
                     a = self.matrix[r, m].astype(int)
                     b = other.matrix[m, c].astype(int)
-                    # so cool that the polynomial multiplication is convolution
-                    conv = np.convolve(a, b).astype(int)
-                    # zamaist convolution można zrobić DCT, przemnożenie tych
-                    # współczynników i potem odwrotna DCT
-                    # fold using negacyclic rule
-                    for idx, coef in enumerate(conv):
-                        if idx < n:
-                            acc[idx] = (acc[idx] + coef) % self.q
-                        else:
-                            # fold: x^{n + t} -> - x^t
-                            t = idx - n
-                            acc[t] = (acc[t] - coef) % self.q
+                    if USE_DFT_INSTEAD_OF_CONVOLUTION:
+                        # includes negacyclic rule
+                        conv = multiply_polynomials(a, b)
+                        acc = conv
+                    else:
+                        # so cool
+                        conv = np.convolve(a, b).astype(int)
+                        # fold using negacyclic rule
+                        for idx, coef in enumerate(conv):
+                            if idx < n:
+                                acc[idx] = (acc[idx] + coef) % self.q
+                            else:
+                                # fold: x^{n + t} -> - x^t
+                                t = idx - n
+                                acc[t] = (acc[t] - coef) % self.q
                 values[r, c] = acc % self.q
 
         result_pm = PolynomialMatrix(self.q, self.n_rows,
