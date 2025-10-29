@@ -37,7 +37,8 @@ def demo_kyber_pke() -> None:
     """Show how KyberPKE class works."""
 
     # Alice
-    kyber = KyberPKE(n=256)
+    kyber = KyberPKE(n=256, eta1=10) # changing the eta can induce errors
+    # in decoding the message. For 256: 5 ok, 10 not, 15 horrible
     public_key, private_key = kyber.generate_keys()
     print('Public key:')
     print(public_key)
@@ -56,9 +57,6 @@ def demo_kyber_pke() -> None:
     decrypted_message = kyber.decrypt_message(encrypted_message, private_key)
     print('Decrypted message:')
     print(decrypted_message)
-    # todo można pokazać co się zepsuje - to znaczy przy losowaniu może wyjść,
-    # że przeskoczy w odszyfrowywaniu jakiś bit
-    # można obliczyć statystykę ile %
 
 
 def test_operations() -> None:
