@@ -19,7 +19,8 @@ class PolynomialMatrix():
         self.n = polynomial_degree
 
         if max_coefficient_value == 0:
-            self.matrix = np.zeros((n_rows, n_cols, polynomial_degree))
+            self.matrix = np.zeros(
+                (n_rows, n_cols, polynomial_degree), dtype=int)
         elif include_negative:
             self.matrix = np.random.randint(
                 -max_coefficient_value, max_coefficient_value+1,
@@ -116,7 +117,7 @@ class PolynomialMatrix():
             raise ValueError("Matrix dimensions don't match.")
 
         n = self.n
-        values = np.zeros((self.n_rows, other.n_cols, n))
+        values = np.zeros((self.n_rows, other.n_cols, n), dtype=int)
 
         for r in range(self.n_rows):
             for c in range(other.n_cols):
@@ -127,7 +128,8 @@ class PolynomialMatrix():
                     b = other.matrix[m, c].astype(int)
                     # so cool that the polynomial multiplication is convolution
                     conv = np.convolve(a, b).astype(int)
-                    # zamaist convolution można zrobić DCT, przemnożenie tych współczynników i potem odwrotna DCT
+                    # zamaist convolution można zrobić DCT, przemnożenie tych
+                    # współczynników i potem odwrotna DCT
                     # fold using negacyclic rule
                     for idx, coef in enumerate(conv):
                         if idx < n:

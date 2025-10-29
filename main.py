@@ -56,7 +56,8 @@ def demo_kyber_pke() -> None:
     decrypted_message = kyber.decrypt_message(encrypted_message, private_key)
     print('Decrypted message:')
     print(decrypted_message)
-    # todo można pokazać co się zepsuje - to znaczy przy losowaniu może wyjść, że przeskoczy w odszyfrowywaniu jakiś bit
+    # todo można pokazać co się zepsuje - to znaczy przy losowaniu może wyjść,
+    # że przeskoczy w odszyfrowywaniu jakiś bit
     # można obliczyć statystykę ile %
 
 
@@ -72,4 +73,3 @@ if __name__ == '__main__':
     # demo_polynomial_matrices()
     demo_kyber_pke()
     # test_operations()
-# todo gdzieś floaty są
