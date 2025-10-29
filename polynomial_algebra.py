@@ -127,6 +127,7 @@ class PolynomialMatrix():
                     b = other.matrix[m, c].astype(int)
                     # so cool that the polynomial multiplication is convolution
                     conv = np.convolve(a, b).astype(int)
+                    # zamaist convolution można zrobić DCT, przemnożenie tych współczynników i potem odwrotna DCT
                     # fold using negacyclic rule
                     for idx, coef in enumerate(conv):
                         if idx < n:
