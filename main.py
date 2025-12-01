@@ -9,7 +9,7 @@ from polynomial_algebra import PolynomialMatrix
 from polynomial_multiplication_fft import multiply_polynomials
 
 
-# np.random.seed(42)
+np.random.seed(42)
 
 
 def demo_polynomial_matrices() -> None:
@@ -42,7 +42,7 @@ def demo_kyber_pke() -> None:
     """Show how KyberPKE class works."""
 
     # Alice
-    kyber = KyberPKE(n=1024, eta1=3)  # changing the eta can induce errors
+    kyber = KyberPKE(n=1024, eta2=8)  # changing the eta can induce errors
     public_key, private_key = kyber.generate_keys()
     print('Public key:')
     print(public_key)
@@ -84,8 +84,8 @@ def test_polynomial_multiplication_fft() -> None:
     print(result)
 
 
-def run_kyber_pke() -> None:
-    kyber = KyberPKE(n=1024, eta1=3)
+def run_kyber_pke(n: int = 1024) -> None:
+    kyber = KyberPKE(n, eta1=3)
     public_key, private_key = kyber.generate_keys()
     message = "Who's the monster?"
     encrypted_message = kyber.encrypt_message(message, public_key)
@@ -93,43 +93,45 @@ def run_kyber_pke() -> None:
 
 
 def check_times() -> None:
+    n = 1000
     polynomial_algebra.USE_DFT_INSTEAD_OF_CONVOLUTION = False
-    t = timeit(run_kyber_pke, number=500)
+    t = timeit(lambda: run_kyber_pke(n), number=100)
     print('Convolution:')
     print(round(t, 3), "s")
 
     polynomial_algebra.USE_DFT_INSTEAD_OF_CONVOLUTION = True
-    t = timeit(run_kyber_pke, number=500)
+    t = timeit(lambda: run_kyber_pke(n), number=100)
     print('FFT:')
     print(round(t, 3), "s")
 
 
 def plot_times() -> None:
-    runs = [1, 10, 50, 100, 200, 500]
+    degrees = [1, 10, 50, 100, 200, 500, 1000]
     conv_times = np.array([])
     fft_times = np.array([])
 
-    for n_runs in runs:
+    for n in degrees:
         polynomial_algebra.USE_DFT_INSTEAD_OF_CONVOLUTION = False
-        conv_time = timeit(run_kyber_pke, number=n_runs)
+        conv_time = timeit(lambda: run_kyber_pke(n), number=100)
         polynomial_algebra.USE_DFT_INSTEAD_OF_CONVOLUTION = True
-        fft_time = timeit(run_kyber_pke, number=n_runs)
+        fft_time = timeit(lambda: run_kyber_pke(n), number=100)
 
         conv_times = np.append(conv_times, conv_time)
         fft_times = np.append(fft_times, fft_time)
 
-    plt.plot(runs, conv_times, label='Conv', marker='o')
-    plt.plot(runs, fft_times, label='FFT', marker='o')
+    plt.plot(degrees, conv_times, label='Conv', marker='o')
+    plt.plot(degrees, fft_times, label='FFT', marker='o')
     plt.legend()
-    plt.xlabel('Number of runs')
+    plt.xlabel('Degree of polynomial')
     plt.ylabel('Time [s]')
     plt.savefig('times.png')
 
 
 if __name__ == '__main__':
     # demo_polynomial_matrices()
-    # demo_kyber_pke()
     # test_operations()
     # test_polynomial_multiplication_fft()
-    check_times()
-    # plot_times()
+    # check_times()
+
+    # demo_kyber_pke()
+    plot_times()
